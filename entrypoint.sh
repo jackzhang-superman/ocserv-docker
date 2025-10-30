@@ -53,6 +53,16 @@ render_conf() {
   fi
 }
 
+deploy_profile() {
+  # 将仓库中的 config/profile.xml 放到 ocserv 期望的位置
+  if [[ -f /app/config/profile.xml ]]; then
+    install -m 0644 /app/config/profile.xml /etc/ocserv/profile.xml
+    echo "[INFO] profile.xml deployed to /etc/ocserv/profile.xml"
+  else
+    echo "[WARN] /app/config/profile.xml not found; skipping profile deployment."
+  fi
+}
+
 check_certs() {
   [[ -f /etc/ocserv/cyberfly.org/fullchain.pem ]] || { echo "缺少 fullchain.pem"; exit 1; }
   [[ -f /etc/ocserv/cyberfly.org/privkey.pem  ]] || { echo "缺少 privkey.pem";  exit 1; }
@@ -71,6 +81,7 @@ start() {
 
 ensure_tun
 render_conf
+deploy_profile
 check_certs
 enable_forwarding
 start
