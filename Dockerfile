@@ -1,11 +1,14 @@
 FROM debian:bookworm
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ocserv radcli radcli-dicts \
-    dumb-init gettext-base ca-certificates \
-    iproute2 iptables nftables procps iputils-ping curl \
- && rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      ocserv dumb-init gettext-base ca-certificates \
+      iproute2 iptables nftables procps iputils-ping curl; \
+    (apt-get install -y --no-install-recommends radcli radcli-dicts) \
+      || apt-get install -y --no-install-recommends libradcli4; \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY entrypoint.sh /app/entrypoint.sh
