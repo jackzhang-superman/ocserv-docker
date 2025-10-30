@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  ocserv:
+    build: .
+    container_name: ocserv
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv6.conf.all.forwarding: "1"
+
+    ulimits:
+      nofile:
+        soft: 51200
+        hard: 51200
+
+    environment:
+      VPN_TCP_PORT: "1600"
+      VPN_UDP_PORT: "1600"
+      KEEPALIVE: "300"
+      STATS_REPORT: "600"
+      DPD: "120"
+      MOBILE_DPD: "90"
+      TLS_PRIORITIES: "NORMAL:%SERVER_PRECEDENCE:%COMPAT:-VERS-SSL3.0"
+      MAX_CLIENTS: "51200"
+      MAX_SAME: "10000"
+      DEVICE: "vpns"
+      DEFAULT_DOMAIN: "example.com"
+      DNS: "8.8.8.8,8.8.4.4"
+      BANNER: "欢迎使用 节点-(官网地址为：https://www.cyberfly.org)"
+      ENABLE_CISCO_COMPAT: "true"
+      ENABLE_DTLS_LEGACY: "true"
+
+      RADIUS_SERVER: "139.162.17.63"
+      RADIUS_AUTH_PORT: "1812"
+      RADIUS_ACCT_PORT: "1813"
+      RADIUS_SECRET: "testing123"
+      RADIUS_NAS_IDENTIFIER: "ocserv-docker-prod"
+
+      FORCE_TEMPLATE: "true"
+
+    volumes:
+      - ./certs:/etc/ocserv/cyberfly.org:ro
+      - ./config:/app/config:ro
+      - ./radius:/app/radius:ro
+      - ocserv-runtime:/etc/ocserv
+      - radcli-runtime:/etc/radcli
+
+volumes:
+  ocserv-runtime:
+  radcli-runtime:

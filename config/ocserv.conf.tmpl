@@ -1,0 +1,58 @@
+# RADIUS auth + acct via radcli
+auth = "radius [config=/etc/radcli/radiusclient.conf]"
+acct = "radius [config=/etc/radcli/radiusclient.conf]"
+
+log-file = ${LOG_FILE}
+tcp-port = ${VPN_TCP_PORT}
+udp-port = ${VPN_UDP_PORT}
+
+run-as-user = nobody
+run-as-group = daemon
+socket-file = /var/run/ocserv-socket
+
+# Certificates (mounted from host)
+server-cert = /etc/ocserv/cyberfly.org/fullchain.pem
+server-key  = /etc/ocserv/cyberfly.org/privkey.pem
+# ca-cert = /etc/ocserv/cyberfly.org/cert.pem
+
+isolate-workers = true
+banner = "${BANNER}"
+
+max-clients = ${MAX_CLIENTS}
+max-same-clients = ${MAX_SAME}
+server-stats-reset-time = 604800
+
+keepalive = ${KEEPALIVE}
+stats-report-time = ${STATS_REPORT}
+dpd = ${DPD}
+mobile-dpd = ${MOBILE_DPD}
+switch-to-tcp-timeout = 25
+try-mtu-discovery = true
+
+tls-priorities = "${TLS_PRIORITIES}"
+auth-timeout = 240
+min-reauth-time = 300
+max-ban-score = 0
+ban-reset-time = 1200
+cookie-timeout = 86400
+deny-roaming = false
+rekey-time = 86400
+rekey-method = ssl
+use-occtl = true
+pid-file = /var/run/ocserv.pid
+
+device = ${DEVICE}
+predictable-ips = true
+default-domain = ${DEFAULT_DOMAIN}
+
+user-profile = /etc/ocserv/profile.xml
+
+ipv4-network = 192.168.1.0
+ipv4-netmask = 255.255.255.0
+# ipv6-network = fda9:4efe:7e3b:03ea::/48
+
+tunnel-all-dns = true
+${DNS_LINES}
+
+cisco-client-compat = ${ENABLE_CISCO_COMPAT}
+dtls-legacy = ${ENABLE_DTLS_LEGACY}
