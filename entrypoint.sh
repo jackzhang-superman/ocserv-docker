@@ -8,8 +8,8 @@ set -Eeuo pipefail
 : "${DPD:=120}"
 : "${MOBILE_DPD:=90}"
 : "${TLS_PRIORITIES:=NORMAL:%SERVER_PRECEDENCE:%COMPAT:-VERS-SSL3.0}"
-: "${MAX_CLIENTS:=51200}"
-: "${MAX_SAME:=10000}"
+: "${MAX_CLIENTS:=4096}"
+: "${MAX_SAME:=64}"
 : "${DEVICE:=vpns}"
 : "${DEFAULT_DOMAIN:=example.com}"
 : "${DNS:=8.8.8.8,8.8.4.4}"
@@ -46,15 +46,16 @@ render_conf() {
   fi
   if [[ ! -f "$RADCLI_CONF" || "$FORCE_TEMPLATE" == "true" ]]; then
     envsubst < /app/radius/radiusclient.conf.tmpl > "$RADCLI_CONF"
+    # 兼容性修正：模板若误写为 nas_identifier，这里强制替换为 radcli 标准 nas-identifier
+    sed -i 's/^nas_identifier/nas-identifier/' "$RADCLI_CONF" || true
   fi
   if [[ ! -f "$RADCLI_SERVERS" || "$FORCE_TEMPLATE" == "true" ]]; then
     envsubst < /app/radius/servers.tmpl > "$RADCLI_SERVERS"
-    chmod 600 "$RADCLI_SERVERS"
+    chmod 600 "$RADCLI_SERVERS" || true
   fi
 }
 
 deploy_profile() {
-  # 将仓库中的 config/profile.xml 放到 ocserv 期望的位置
   if [[ -f /app/config/profile.xml ]]; then
     install -m 0644 /app/config/profile.xml /etc/ocserv/profile.xml
     echo "[INFO] profile.xml deployed to /etc/ocserv/profile.xml"
@@ -63,15 +64,38 @@ deploy_profile() {
   fi
 }
 
+fix_radcli_dict() {
+  # 优先使用 radcli 的标准路径；若不存在则尝试从 freeradius 软链
+  if [[ ! -e /usr/share/radcli/dictionary ]]; then
+    if [[ -e /usr/share/freeradius/dictionary ]]; then
+      mkdir -p /usr/share/radcli
+      ln -s /usr/share/freeradius/dictionary /usr/share/radcli/dictionary
+      echo "[INFO] radcli dictionary symlinked from /usr/share/freeradius/dictionary"
+    else
+      echo "[ERROR] radcli dictionary missing: /usr/share/radcli/dictionary"
+      exit 1
+    fi
+  fi
+}
+
 check_certs() {
   [[ -f /etc/ocserv/cyberfly.org/fullchain.pem ]] || { echo "缺少 fullchain.pem"; exit 1; }
   [[ -f /etc/ocserv/cyberfly.org/privkey.pem  ]] || { echo "缺少 privkey.pem";  exit 1; }
-  chmod 600 /etc/ocserv/cyberfly.org/privkey.pem || true
+  # 只在可写时调整权限，避免只读挂载报错
+  if [[ -w /etc/ocserv/cyberfly.org/privkey.pem ]]; then
+    chmod 600 /etc/ocserv/cyberfly.org/privkey.pem || true
+  fi
 }
 
 enable_forwarding() {
+  # host 网络下 Docker 可能不允许 sysctl，这里失败也不致命
   sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1 || true
   [[ "$ENABLE_IPV6" == "true" ]] && sysctl -w net.ipv6.conf.all.forwarding=1 >/dev/null 2>&1 || true
+}
+
+tune_limits() {
+  # 提高容器内进程可打开文件数，若宿主未允许则忽略
+  ulimit -n 131072 || true
 }
 
 start() {
@@ -82,6 +106,8 @@ start() {
 ensure_tun
 render_conf
 deploy_profile
+fix_radcli_dict
 check_certs
 enable_forwarding
+tune_limits
 start
