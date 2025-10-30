@@ -5,7 +5,8 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       ocserv dumb-init gettext-base ca-certificates \
-      iproute2 iptables nftables procps iputils-ping curl; \
+      iproute2 iptables nftables procps iputils-ping curl \
+      freeradius-common; \
     (apt-get install -y --no-install-recommends radcli radcli-dicts) \
       || apt-get install -y --no-install-recommends libradcli4; \
     rm -rf /var/lib/apt/lists/*
