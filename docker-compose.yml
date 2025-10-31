@@ -17,7 +17,7 @@ services:
 
     environment:
       VPN_TCP_PORT: "1600"
-      VPN_UDP_PORT: "1600"
+      VPN_UDP_PORT: "0"
       KEEPALIVE: "300"
       STATS_REPORT: "600"
       DPD: "120"
