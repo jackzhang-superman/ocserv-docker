@@ -97,3 +97,25 @@ netfilter-persistent save
 - 模板修改后需执行：`docker compose up -d`  
 - 日志查看命令：`docker logs -f ocserv`
 
+## 🧩 运维命令 (Maintenance Commands)
+
+### 🔄 更新仓库与容器
+```bash
+cd ~/ocserv-docker
+git pull
+docker compose down
+docker compose up -d
+
+### 🔄 更新本地容器
+```bash
+cd ~/ocserv-docker
+docker compose down
+docker compose up -d
+
+### 🔄 查看容器日志
+```bash
+docker logs -f ocserv
+
+
+
+
