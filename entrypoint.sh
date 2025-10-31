@@ -9,7 +9,7 @@ set -Eeuo pipefail
 : "${MOBILE_DPD:=90}"
 : "${TLS_PRIORITIES:=NORMAL:%SERVER_PRECEDENCE:%COMPAT:-VERS-SSL3.0}"
 : "${MAX_CLIENTS:=4096}"
-: "${MAX_SAME:=64}"
+: "${MAX_SAME:=6400}"
 : "${DEVICE:=vpns}"
 : "${DEFAULT_DOMAIN:=example.com}"
 : "${DNS:=8.8.8.8,8.8.4.4}"
