@@ -1,4 +1,3 @@
-
 services:
   ocserv:
     build: .
@@ -13,8 +12,8 @@ services:
 
     ulimits:
       nofile:
-        soft: 51200
-        hard: 51200
+        soft: 131072
+        hard: 262144
 
     environment:
       VPN_TCP_PORT: "1600"
@@ -24,8 +23,8 @@ services:
       DPD: "120"
       MOBILE_DPD: "90"
       TLS_PRIORITIES: "NORMAL:%SERVER_PRECEDENCE:%COMPAT:-VERS-SSL3.0"
-      MAX_CLIENTS: "51200"
-      MAX_SAME: "10000"
+      MAX_CLIENTS: "4096"     # 先保守，跑稳后再升
+      MAX_SAME: "64"
       DEVICE: "vpns"
       DEFAULT_DOMAIN: "example.com"
       DNS: "8.8.8.8,8.8.4.4"
