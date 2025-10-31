@@ -65,18 +65,34 @@ deploy_profile() {
 }
 
 fix_radcli_dict() {
-  # 优先使用 radcli 的标准路径；若不存在则尝试从 freeradius 软链
+  # 优先使用 /usr/share/radcli/dictionary；若无则尝试从 FreeRADIUS 软链
   if [[ ! -e /usr/share/radcli/dictionary ]]; then
     if [[ -e /usr/share/freeradius/dictionary ]]; then
       mkdir -p /usr/share/radcli
       ln -s /usr/share/freeradius/dictionary /usr/share/radcli/dictionary
-      echo "[INFO] radcli dictionary symlinked from /usr/share/freeradius/dictionary"
-    else
-      echo "[ERROR] radcli dictionary missing: /usr/share/radcli/dictionary"
-      exit 1
+      echo "[INFO] radcli dictionary -> /usr/share/freeradius/dictionary"
     fi
   fi
+
+  # 部分环境 ocserv/radcli 会找 dictionary.compat；给它一个兜底的软链
+  if [[ -e /usr/share/radcli/dictionary && ! -e /usr/share/radcli/dictionary.compat ]]; then
+    ln -s /usr/share/radcli/dictionary /usr/share/radcli/dictionary.compat
+    echo "[INFO] created /usr/share/radcli/dictionary.compat symlink"
+  fi
+
+  # 我们的 radiusclient.conf 指向 /etc/radcli/dictionary —— 确保这个路径也可用
+  if [[ -e /usr/share/radcli/dictionary && ! -e /etc/radcli/dictionary ]]; then
+    ln -s /usr/share/radcli/dictionary /etc/radcli/dictionary
+    echo "[INFO] /etc/radcli/dictionary -> /usr/share/radcli/dictionary"
+  fi
+
+  # 最终兜底：仍然不存在则报错退出，避免 sec-mod 死循环
+  if [[ ! -e /usr/share/radcli/dictionary && ! -e /etc/radcli/dictionary ]]; then
+    echo "[ERROR] radcli dictionary not found. Install radcli-dicts or freeradius-common."
+    exit 1
+  fi
 }
+
 
 check_certs() {
   [[ -f /etc/ocserv/cyberfly.org/fullchain.pem ]] || { echo "缺少 fullchain.pem"; exit 1; }
